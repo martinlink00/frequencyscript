@@ -1,22 +1,8 @@
-#!/usr/bin/env wolframscript
-(* ::Package:: *)
-
 (*
 
-Notes for usage:
-
-- Effective potential terms will be calculated up to Subscript[V, 2*highestcoeff] and the boolean incond can be switched on if initial conditions are to be calculated.
-- Before running the script, the kernel needs to be reset in order to delete all global parameters from memory.
-- Note, that results are dumpsaved into the subfolder "exports", in order to save RAM and in order to not lose results if Mathematica crashes which it tends to do.
+Note, that results are dumpsaved into the subfolder "exports", in order to save RAM and in order to not lose results if Mathematica crashes which it tends to do.
 
 *)
-
-
-
-
-(**************************************************************************)
-
-
 
 
 total=
@@ -147,7 +133,7 @@ For[i=1,i<\[Epsilon]max+1,i++,
 				];
 			];
 			LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
-			\[Phi][i-j,j][t_]= addi[solex];
+			\[Phi][i-j,j][t_] := addi[solex];
 			DumpSave["phi.mx",\[Phi]];
 			Clear[\[Phi],solex];
 		];
@@ -166,6 +152,17 @@ PD[];LogPrint["All phi[n!=0,m,t] declared. It took "<>ToString[Round[algtime,0.1
 vefftime = Timing[
 
 LogPrint["Acquiring acceleration expressions.","PROGRESS"];
+LogPrint["Setting varphis to zero.","PRG:ACC"];
+Monitor[
+	For[m=0,m<highestcoeff+1,m++,
+		\[CurlyPhi][2m][t] = 0;
+		\[CurlyPhi][2m]'[t] = 0;
+	],
+	ProgressIndicator[m,{0,highestcoeff+1}]
+];
+
+LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
+
 acc0[ord_] :=  Coefficient[Expand[\[Omega]^2 (sinexp[ord-2]-\[Rho]  * 1/(2 I) * (x-1/x)sinexp[ord-1]),x||f[n_][t_]],x,0]//.additiontheorem;
 acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
@@ -180,8 +177,6 @@ MultilineFunction->None]\)[t]=D[a[2m][t],{t,n}];
 	];
 ];
 
-LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
-
 Monitor[
 	For[m=0,m<highestcoeff,m++,
 		a[2m][t_]=acc0list[[m+1]];
@@ -192,19 +187,11 @@ Monitor[
 DumpSave["a.mx",a];
 ClearAll[a];
 <<a.mx;
+
+
 acc0list = addi[acc0list];
 
-LogPrint["Declaring varphi_2m'[t].","PRG:ACC"];
 
-Monitor[
-	For[m=0,m<highestcoeff+1,m++,
-		\[CurlyPhi][2m][t] = 0;
-		\[CurlyPhi][2m]'[t] = 0;
-		V[2m][t] = 0;
-		V[2m]'[t] = 0;
-	],
-	ProgressIndicator[m,{0,highestcoeff+1}]
-];
 
 
 PD[];
