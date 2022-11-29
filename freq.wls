@@ -81,7 +81,7 @@ dercoeff = Series[\[Epsilon]^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](
 f[0][t_] := 1;
 f[n_]'[t_] := n I \[CurlyPhi][0]'[t]f[n][t];
 additiontheorem = {f[n_][t]f[m_][t]:>f[n+m][t],(f[n_][t])^m_:>f[n*m][t]};
-addi[exp_] := Expand[exp,f[n_][t_]]//.additiontheorem;
+addi[exp_] := Expand[exp]//.additiontheorem;
 sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3]]/.{Sin[\[CurlyPhi][0][t]]->1/(2 I) (f[1][t]-f[-1][t]),Cos[\[CurlyPhi][0][t]]->1/2 (f[1][t]+f[-1][t])};
 bellargument = Table[Table[Factorial[i]\[Theta]sercoeff[[i+1]],{i,1,n}],{n,1,\[Epsilon]max}];
 sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) (f[1][t]-f[-1][t]),1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
@@ -171,12 +171,6 @@ Monitor[
 DumpSave["a.mx",a];
 ClearAll[a];
 <<a.mx;
-
-
-acc0list = addi[acc0list];
-
-
-
 
 PD[];
 LogPrint["Expanding acceleration expressions.","PRG:POT"];
