@@ -4,7 +4,6 @@ Note, that results are dumpsaved into the subfolder "exports", in order to save 
 
 *)
 
-
 total=
 Timing[
 
@@ -102,7 +101,7 @@ sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3
 bellargument = Table[Table[Factorial[i]\[Theta]sercoeff[[i+1]],{i,1,n}],{n,1,\[Epsilon]max}];
 sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) (f[1][t]-f[-1][t]),1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
 
-DumpSave["ini.mx",{(*\[Rho],\[Omega],*)LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,myByteCount,CheckRAM,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
+DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,myByteCount,CheckRAM,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
 
 
 (*Sin treatment*)
@@ -133,7 +132,7 @@ For[i=1,i<\[Epsilon]max+1,i++,
 				];
 			];
 			LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
-			\[Phi][i-j,j][t_] := addi[solex];
+			\[Phi][i-j,j][t_] = addi[solex];
 			DumpSave["phi.mx",\[Phi]];
 			Clear[\[Phi],solex];
 		];
