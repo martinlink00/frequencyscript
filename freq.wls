@@ -28,22 +28,7 @@ LogPrint[x_,type_] := Module[{},
 	outp = "["<>DateString["ISODateTime"]<>"]\t["<>type<>"]\t[Maximum RAM: "<>ToString[Round[N[MaxMemoryUsed[]/(10^9) *1.0],0.01]]<>" GB ("<>ToString[Round[N[MaxMemoryUsed[]/MemoryAvailable[] *100.0],0.01]]<>"%)]\t"<>x;
 	WriteLine[FileNameJoin[{"logs",logfilename}],outp];];
 
-myByteCount[symbolName_String]:=
-	Replace[
-		ToHeldExpression[symbolName],
-		Hold[x__]:>If[MemberQ[Attributes[x],
-		Protected|ReadProtected],
-		Sequence@@{},
-		{ByteCount[Through[{OwnValues,DownValues,UpValues,SubValues,DefaultValues,FormatValues,NValues}[Unevaluated@x,Sort->False]]],symbolName}]
-	];
-CheckRAM[] :=
-	With[
-		{listing=myByteCount/@Names[]},
-		Labeled[Grid[Reverse@Take[Sort[listing],-100],
-		Frame->True,Alignment->Left],
-		Column[{Style["ByteCount for symbols without attributes Protected and ReadProtected in all contexts",16,FontFamily->"Times"],
-		Style[Row@{"Total: ",Total[listing[[All,1]]]," bytes for ",Length[listing]," symbols"},Bold]},Center,1.5],Top]
-	];
+
 PD[]:=Print["---------------------------------------------------------------------"];
 
 AppendTo[$Messages,OpenWrite[FileNameJoin[{"logs",logfilename}]]];
@@ -101,7 +86,7 @@ sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3
 bellargument = Table[Table[Factorial[i]\[Theta]sercoeff[[i+1]],{i,1,n}],{n,1,\[Epsilon]max}];
 sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) (f[1][t]-f[-1][t]),1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
 
-DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,myByteCount,CheckRAM,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
+DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
 
 
 (*Sin treatment*)
