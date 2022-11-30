@@ -48,7 +48,7 @@ userinfo = "Script has been executed on "<>ToString[$OperatingSystem]<>" by the 
 versioninfo = "Running on Mathematica "<>ToString[$VersionNumber]<>".";
 processorinfo = ToString[$ProcessorCount]<>" processors of type "<>ToString[$ProcessorType]<>" available.";
 memoryinfo = ToString[N[DecimalForm[MemoryAvailable[]/10^6]]]<>" MB of memory available for allocation.";
-paraminfo = "Calculating up to non-trivial correction "<>ToString[highestcoeff]<>"."(*<>" with params (rho,om_0) = ("<>ToString[\[Rho]]<>","<>ToString[\[Omega]]<>")."*);
+paraminfo = "Calculating up to non-trivial correction "<>ToString[highestcoeff]<>".";
 esttimeinfo = "Estimate resource usage from logfiles by running paramest.wls.";
 exportinfo = "Results are dumpsaved into exports.";
 loginfo = "Log is saved under exports/logs/"<>logfilename<>".";
@@ -62,13 +62,13 @@ LogPrint["### NOW RUNNING SCRIPT ###","RUNNING"];PD[];
 LogPrint["Initiating.","PROGRESS"];
 \[Epsilon]max = 2 * highestcoeff + 2; (*Max collected \[Epsilon]*)
 highestpowercorr=highestcoeff; (*Highest power correction*)
-e[n_,t]:=Exp[I \[Omega] n t];
+e[n_,t]:=Exp[I n t];
 \[CapitalPhi][n_] := \[Epsilon]^(Abs[n])*Piecewise[{{Sum[\[Phi][n,m][t]\[Epsilon]^m,{m,0,\[Epsilon]max-n}],n>=0}},Sum[(-1)^(n+m)\[Phi][-n,m][t] \[Epsilon]^m,{m,0,\[Epsilon]max-n}]];
 \[Delta]\[Theta]= Sum[If[n==0,0,e[n,t]\[CapitalPhi][n]],{n,-\[Epsilon]max,\[Epsilon]max}]; (*\[Delta]\[Theta] Ansatz*)
 \[Theta]= \[CapitalPhi][0] +\[Delta]\[Theta];
 oddphi0repl =Flatten[Table[D[\[Phi][0,2i+1][t],{t,k}]->0,{i,0,highestcoeff+2},{k,0,\[Epsilon]max}]];
 newnot = Flatten[Table[D[\[Phi][0,2j][t],{t,k}]->D[\[CurlyPhi][2j][t],{t,k}],{j,0,highestcoeff+2},{k,0,\[Epsilon]max}],2];
-enrepl = Table[Exp[I \[Omega] n t]->x^n,{n,-\[Epsilon]max,\[Epsilon]max}];
+enrepl = Table[Exp[I n t]->x^n,{n,-\[Epsilon]max,\[Epsilon]max}];
 PD[];
 
 algtime =
@@ -77,7 +77,7 @@ Timing[
 \[Theta]sercoeff = Series[\[Theta]/.oddphi0repl/.newnot,{\[Epsilon],0,\[Epsilon]max}][[3]];
 \[Omega]sercoeff = D[\[Theta]sercoeff,t]/.enrepl;
 \[Theta]sercoeff = \[Theta]sercoeff/.enrepl;
-dercoeff = Series[\[Epsilon]^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](\[Epsilon]^2 D[\[CapitalPhi][n],{t,2}] + 2 I \[Omega] n \[Epsilon] D[\[CapitalPhi][n],{t,1}]-\[Omega]^2 n^2 \[CapitalPhi][n])],{n,-\[Epsilon]max,\[Epsilon]max}]/.oddphi0repl /.newnot/.enrepl,{\[Epsilon],0,\[Epsilon]max}][[3]];
+dercoeff = Series[\[Epsilon]^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](\[Epsilon]^2 D[\[CapitalPhi][n],{t,2}] + 2 I n \[Epsilon] D[\[CapitalPhi][n],{t,1}]- n^2 \[CapitalPhi][n])],{n,-\[Epsilon]max,\[Epsilon]max}]/.oddphi0repl /.newnot/.enrepl,{\[Epsilon],0,\[Epsilon]max}][[3]];
 f[0][t_] := 1;
 f[n_]'[t_] := n I \[CurlyPhi][0]'[t]f[n][t];
 additiontheorem = {f[n_][t]f[m_][t]:>f[n+m][t],(f[n_][t])^m_:>f[n*m][t]};
@@ -94,7 +94,6 @@ DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],
 LogPrint["Acquiring sin(theta) expansion.","PRG:INIT"];
 sinexplist = Table[sinexpfunc[ee],{ee,0,\[Epsilon]max-1}]; (*Need only up to \[Epsilon]max-1, since one \[Epsilon] already on lhs.*)
 sinexp[\[Epsilon]ord_] := If[\[Epsilon]ord<0,0,sinexplist[[\[Epsilon]ord+1]]];
-dgl[\[Epsilon]ord_,nord_] := (Coefficient[Expand[dercoeff[[\[Epsilon]ord]]],x,nord]==Coefficient[Expand[\[Omega]^2 (sinexp[\[Epsilon]ord-2]-\[Rho]  * 1/(2 I) * (x-1/x)sinexp[\[Epsilon]ord-1])],x,nord]);
 Share[]; (*In hope of saving memory.*)
 
 (*Declare \[Phi][n\[NotEqual]0,m,t] solutions*)
@@ -104,16 +103,16 @@ PD[];LogPrint["Acquiring algebraic solutions up to eps^"<>ToString[\[Epsilon]max
 
 For[i=1,i<\[Epsilon]max+1,i++,
 	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
-	ex[i] = Expand[(\[Omega]^2 (sinexp[i-2]-\[Rho]  * 1/(2 I) * (x-x^-1)sinexp[i-1]))//.additiontheorem,Trig->False];
+	ex[i] = Expand[((sinexp[i-2]-\[Rho]  * 1/(2 I) * (x-x^-1)sinexp[i-1]))//.additiontheorem,Trig->False];
 	Monitor[
 		For[j=0,j<i,j++,
 			If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
 			cef = Coefficient[ex[i],x,i-j];
 			If[j==0,
-				solex=-1/((i-j)^2 \[Omega]^2) (cef),
+				solex=-1/((i-j)^2) (cef),
 				If[j==1,
-				solex=-1/((i-j)^2 \[Omega]^2) (cef - 2 I \[Omega] (i-j)D[\[Phi][i-j,j-1][t],t]),
-				solex=-1/((i-j)^2 \[Omega]^2) (cef- 2 I \[Omega] (i-j)D[\[Phi][i-j,j-1][t],t]-D[\[Phi][i-j,j-2][t],{t,2}])
+				solex=-1/((i-j)^2) (cef - 2 I(i-j)D[\[Phi][i-j,j-1][t],t]),
+				solex=-1/((i-j)^2) (cef- 2 I(i-j)D[\[Phi][i-j,j-1][t],t]-D[\[Phi][i-j,j-2][t],{t,2}])
 				];
 			];
 			LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
@@ -147,7 +146,7 @@ Monitor[
 
 LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
 
-acc0[ord_] :=  Coefficient[Expand[\[Omega]^2 (sinexp[ord-2]-\[Rho]  * 1/(2 I) * (x-1/x)sinexp[ord-1]),x||f[n_][t_]],x,0]//.additiontheorem;
+acc0[ord_] :=  Coefficient[Expand[(sinexp[ord-2]-\[Rho]  * 1/(2 I) * (x-1/x)sinexp[ord-1]),x||f[n_][t_]],x,0]//.additiontheorem;
 acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
 For[m=0,m<highestcoeff+1,m++,
@@ -182,7 +181,7 @@ ClearAll[acc0list];
 LogPrint["Acquiring frequency expressions..","PRG:POT"];
 
 For[n=0,n<highestcoeff+1,n++,
-	\[Omega][2n] = Collect[addi[-acc0list[[n+1]]]/.{f[n_][_]:>I n}/.\[Omega]->1,\[Rho],Expand];
+	\[Omega][2n] = Collect[addi[-acc0list[[n+1]]]/.{f[n_][_]:>I n},\[Rho],Expand];
 ];
 DumpSave["om.mx",\[Omega]];
 
