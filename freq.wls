@@ -105,23 +105,22 @@ For[i=1,i<\[Epsilon]max+1,i++,
 	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
 	ex[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
 	For[j=0,j<i,j++,
+		LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
 		If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
 		cef = addi[Coefficient[-1/((i-j)^2) ex[i],x,i-j]];
 		If[j==0,
-			solex = cef,
+			\[Phi][i-j,j][t_] = cef,
 			If[j==1,
-			solex = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]],
-			solex = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]] + Expand[1/(i-j)^2 D[\[Phi][i-j,j-2][t],{t,2}]]
+			\[Phi][i-j,j][t_] = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]],
+			\[Phi][i-j,j][t_] = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]] + Expand[1/(i-j)^2 D[\[Phi][i-j,j-2][t],{t,2}]]
 			];
 		];
-		LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
-		\[Phi][i-j,j][t_] = solex;
 		DumpSave["phi.mx",\[Phi]];
-		Clear[\[Phi],solex];
+		Clear[\[Phi]];
 	];
 ];
 
-ClearAll[ex,cef,solex];
+ClearAll[ex,cef];
 <<phi.mx;
 
 ][[1]];
@@ -137,14 +136,6 @@ LogPrint["Setting varphis to zero.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
 	\[CurlyPhi][2m][t] = 0;
 	\[CurlyPhi][2m]'[t] = 0;
-];
-
-LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
-
-acc0[ord_] :=  addi[Coefficient[Expand[sinexp[ord-2]- r * 1/(2 I) * (x-1/x)sinexp[ord-1],x],x,0]];
-acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
-
-For[m=0,m<highestcoeff+1,m++,
 	For[n=0,n<\[Epsilon]max-1,n++,
 		\!\(\*SuperscriptBox[\(\[CurlyPhi][2  m]\), 
 TagBox[
@@ -154,6 +145,11 @@ Derivative],
 MultilineFunction->None]\)[t]=D[a[2m][t],{t,n}];
 	];
 ];
+
+LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
+
+acc0[ord_] :=  addi[Coefficient[Expand[sinexp[ord-2]- r * 1/(2 I) * (x-1/x)sinexp[ord-1],x],x,0]];
+acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
 For[m=0,m<highestcoeff,m++,
 	a[2m][t_]=acc0list[[m+1]];
@@ -166,7 +162,7 @@ ClearAll[a];
 LogPrint["Expanding varphi_2m''[t].","PRG:ACC"];
 
 acc0list = addi[acc0list];
-DumpSave["acclist.mx",acc0list];
+DumpSave["acclist.mx",{acc0list}];
 ClearAll[acc0list];
 <<acclist.mx;
 
