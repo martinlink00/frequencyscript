@@ -105,7 +105,7 @@ For[i=1,i<\[Epsilon]max+1,i++,
 	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
 	ex[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
 	For[j=0,j<i,j++,
-		LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
+		LogPrint["Declaring algebraic solution of phi["<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
 		If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
 		cef = addi[Coefficient[-1/((i-j)^2) ex[i],x,i-j]];
 		If[j==0,
@@ -132,8 +132,9 @@ PD[];LogPrint["All phi[n!=0,m,t] declared. It took "<>ToString[Round[algtime,0.1
 vefftime = Timing[
 
 LogPrint["Acquiring acceleration expressions.","PROGRESS"];
-For[m=0,m<highestcoeff+1,m++,
 
+LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
+For[m=0,m<highestcoeff+1,m++,
 	For[n=0,n<\[Epsilon]max-1,n++,
 		\!\(\*SuperscriptBox[\(\[CurlyPhi][2  m]\), 
 TagBox[
@@ -144,12 +145,11 @@ MultilineFunction->None]\)[t]=D[a[2m][t],{t,n}];
 	];
 ];
 
-LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
-
 acc0[ord_] :=  addi[Coefficient[Expand[sinexp[ord-2]- r * 1/(2 I) * (x-1/x)sinexp[ord-1],x],x,0]];
 acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
 For[m=0,m<highestcoeff,m++,
+	LogPrint["Inserting into phi[0,"<>ToString[2 m]<>"]''[t].","PRG:ACC"];
 	a[2m][t_]=acc0list[[m+1]];
 ];
 
@@ -157,7 +157,7 @@ DumpSave["a.mx",a];
 ClearAll[a];
 <<a.mx;
 
-LogPrint["Setting varphis to zero.","PRG:ACC"];
+PD[];LogPrint["Setting varphis to zero.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
 	\[CurlyPhi][2m][t] = 0;
 	\[CurlyPhi][2m]'[t] = 0;
@@ -171,9 +171,7 @@ DumpSave["acclist.mx",{acc0list}];
 ClearAll[acc0list];
 <<acclist.mx;
 
-PD[];
-
-LogPrint["Acquiring frequency expressions..","PRG:POT"];
+LogPrint["Acquiring frequency expressions.","PRG:POT"];
 
 For[n=0,n<highestcoeff+1,n++,
 	\[Omega][2n] = Collect[-acc0list[[n+1]]/.{f[n_][_]:>I n},r,Expand];
