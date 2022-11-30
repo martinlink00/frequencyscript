@@ -150,7 +150,7 @@ acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
 For[m=0,m<highestcoeff,m++,
 	LogPrint["Inserting into phi[0,"<>ToString[2 m]<>"]''[t].","PRG:ACC"];
-	a[2m][t_]=acc0list[[m+1]];
+	a[2m][t_]=addi[acc0list[[m+1]]];
 ];
 
 DumpSave["a.mx",a];
