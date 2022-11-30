@@ -1,96 +1,11 @@
-(* Content-type: application/vnd.wolfram.mathematica *)
+(*HOW TO USE THIS*)
+(*This notebook opens the saved results for \
+\[Omega][2n] from the folder exports.*)
+(*Evaluate this cell to \
+start.*)
 
-(*** Wolfram Notebook File ***)
-(* http://www.wolfram.com/nb *)
-
-(* CreatedBy='Mathematica 12.1' *)
-
-(*CacheID: 234*)
-(* Internal cache information:
-NotebookFileLineBreakTest
-NotebookFileLineBreakTest
-NotebookDataPosition[       158,          7]
-NotebookDataLength[      3030,         88]
-NotebookOptionsPosition[      2557,         71]
-NotebookOutlinePosition[      3077,         90]
-CellTagsIndexPosition[      3034,         87]
-WindowFrame->Normal*)
-
-(* Beginning of Notebook Content *)
-Notebook[{
-Cell[BoxData[
- RowBox[{
-  RowBox[{"(*", 
-   RowBox[{"HOW", " ", "TO", " ", "USE", " ", "THIS"}], "*)"}], 
-  "\[IndentingNewLine]", 
-  RowBox[{"(*", 
-   RowBox[{
-   "This", " ", "notebook", " ", "opens", " ", "the", " ", "saved", " ", 
-    "results", " ", "for", " ", 
-    RowBox[{"\[Omega]", "[", 
-     RowBox[{"2", "n"}], "]"}], " ", "from", " ", "the", " ", "folder", " ", 
-    RowBox[{"exports", "."}]}], "*)"}], "\[IndentingNewLine]", 
-  RowBox[{"(*", 
-   RowBox[{"Evaluate", " ", "this", " ", "cell", " ", "to", " ", 
-    RowBox[{"start", "."}]}], "*)"}], "\[IndentingNewLine]", 
-  "\[IndentingNewLine]", 
-  RowBox[{
-   RowBox[{
-    RowBox[{"SetDirectory", "[", 
-     RowBox[{"NotebookDirectory", "[", "]"}], "]"}], ";"}], 
-   "\[IndentingNewLine]", 
-   RowBox[{
-    RowBox[{"SetDirectory", "[", "\"\<exports\>\"", "]"}], ";"}], 
-   "\[IndentingNewLine]", 
-   RowBox[{
-    RowBox[{"<<", "om.mx"}], ";", 
-    RowBox[{"<<", "ini.mx"}], ";"}], "\n", 
-   RowBox[{
-    RowBox[{
-     RowBox[{"om", "[", "order_", "]"}], ":=", 
-     RowBox[{"Sum", "[", 
-      RowBox[{
-       RowBox[{
-        RowBox[{"\[Epsilon]", "^", 
-         RowBox[{"(", 
-          RowBox[{"2", "n"}], ")"}]}], 
-        RowBox[{"\[Omega]", "[", 
-         RowBox[{"2", "n"}], "]"}]}], ",", 
-       RowBox[{"{", 
-        RowBox[{"n", ",", "0", ",", "order"}], "}"}]}], "]"}]}], 
-    ";"}]}]}]], "Input",
- CellChangeTimes->{{3.873950282295972*^9, 3.8739503033939657`*^9}, {
-   3.873950706812249*^9, 3.8739507415581083`*^9}, {3.873950918741208*^9, 
-   3.87395091878439*^9}, {3.873973709681079*^9, 3.8739739800140257`*^9}, {
-   3.873974341418994*^9, 3.8739743430941896`*^9}, {3.87397679927439*^9, 
-   3.873976817417488*^9}, {3.8741184247044497`*^9, 3.874118449809436*^9}, {
-   3.874118503262761*^9, 3.8741185056516943`*^9}, {3.8783750816898527`*^9, 
-   3.8783750822874317`*^9}, 3.8783760560165358`*^9, {3.878701983844963*^9, 
-   3.878702026434424*^9}},
- CellLabel->"In[5]:=",ExpressionUUID->"86249f61-a790-4410-9b17-67ca1474d64f"]
-},
-WindowSize->{1419, 753},
-WindowMargins->{{10.5, Automatic}, {10.5, Automatic}},
-TaggingRules->{
- "WelcomeScreenSettings" -> {"FEStarting" -> False}, "TryRealOnly" -> False},
-Magnification:>1.2 Inherited,
-FrontEndVersion->"12.1 for Linux x86 (64-bit) (March 18, 2020)",
-StyleDefinitions->"Default.nb",
-ExpressionUUID->"c9132f9c-a502-46b2-94bb-ffc46998cfc6"
-]
-(* End of Notebook Content *)
-
-(* Internal cache information *)
-(*CellTagsOutline
-CellTagsIndex->{}
-*)
-(*CellTagsIndex
-CellTagsIndex->{}
-*)
-(*NotebookFileOutline
-Notebook[{
-Cell[558, 20, 1995, 49, 265, "Input",ExpressionUUID->"86249f61-a790-4410-9b17-67ca1474d64f"]
-}
-]
-*)
-
+SetDirectory[NotebookDirectory[]];
+SetDirectory["exports"];
+<< om.mx; << ini.mx;
+om[order_] := 
+  Sum[\[Epsilon]^(2 n) \[Omega][2 n] /. r -> \[Rho], {n, 0, order}];
