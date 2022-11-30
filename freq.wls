@@ -132,10 +132,8 @@ PD[];LogPrint["All phi[n!=0,m,t] declared. It took "<>ToString[Round[algtime,0.1
 vefftime = Timing[
 
 LogPrint["Acquiring acceleration expressions.","PROGRESS"];
-LogPrint["Setting varphis to zero.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
-	\[CurlyPhi][2m][t] = 0;
-	\[CurlyPhi][2m]'[t] = 0;
+
 	For[n=0,n<\[Epsilon]max-1,n++,
 		\!\(\*SuperscriptBox[\(\[CurlyPhi][2  m]\), 
 TagBox[
@@ -158,6 +156,13 @@ For[m=0,m<highestcoeff,m++,
 DumpSave["a.mx",a];
 ClearAll[a];
 <<a.mx;
+
+LogPrint["Setting varphis to zero.","PRG:ACC"];
+For[m=0,m<highestcoeff+1,m++,
+	\[CurlyPhi][2m][t] = 0;
+	\[CurlyPhi][2m]'[t] = 0;
+];
+
 
 LogPrint["Expanding varphi_2m''[t].","PRG:ACC"];
 
