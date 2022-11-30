@@ -63,7 +63,7 @@ LogPrint["Initiating.","PROGRESS"];
 \[Epsilon]max = 2 * highestcoeff + 2; (*Max collected \[Epsilon]*)
 highestpowercorr=highestcoeff; (*Highest power correction*)
 e[n_,t]:=Exp[I n t];
-\[CapitalPhi][n_] := \[Epsilon]^(Abs[n])*Piecewise[{{Sum[\[Phi][n,m][t]\[Epsilon]^m,{m,0,\[Epsilon]max-n}],n>=0}},Sum[(-1)^(n+m)\[Phi][-n,m][t] \[Epsilon]^m,{m,0,\[Epsilon]max-n}]];
+\[CapitalPhi][n_] := ep^(Abs[n])*Piecewise[{{Sum[\[Phi][n,m][t]ep^m,{m,0,\[Epsilon]max-n}],n>=0}},Sum[(-1)^(n+m)\[Phi][-n,m][t] ep^m,{m,0,\[Epsilon]max-n}]];
 \[Delta]\[Theta]= Sum[If[n==0,0,e[n,t]\[CapitalPhi][n]],{n,-\[Epsilon]max,\[Epsilon]max}]; (*\[Delta]\[Theta] Ansatz*)
 \[Theta]= \[CapitalPhi][0] +\[Delta]\[Theta];
 oddphi0repl =Flatten[Table[D[\[Phi][0,2i+1][t],{t,k}]->0,{i,0,highestcoeff+2},{k,0,\[Epsilon]max}]];
@@ -74,17 +74,17 @@ PD[];
 algtime =
 Timing[
 
-\[Theta]sercoeff = Series[\[Theta]/.oddphi0repl/.newnot,{\[Epsilon],0,\[Epsilon]max}][[3]];
+\[Theta]sercoeff = Series[\[Theta]/.oddphi0repl/.newnot,{ep,0,\[Epsilon]max}][[3]];
 \[Omega]sercoeff = D[\[Theta]sercoeff,t]/.enrepl;
 \[Theta]sercoeff = \[Theta]sercoeff/.enrepl;
-dercoeff = Series[\[Epsilon]^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](\[Epsilon]^2 D[\[CapitalPhi][n],{t,2}] + 2 I n \[Epsilon] D[\[CapitalPhi][n],{t,1}]- n^2 \[CapitalPhi][n])],{n,-\[Epsilon]max,\[Epsilon]max}]/.oddphi0repl /.newnot/.enrepl,{\[Epsilon],0,\[Epsilon]max}][[3]];
+dercoeff = Series[ep^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](ep^2 D[\[CapitalPhi][n],{t,2}] + 2 I n ep D[\[CapitalPhi][n],{t,1}]- n^2 \[CapitalPhi][n])],{n,-\[Epsilon]max,\[Epsilon]max}]/.oddphi0repl /.newnot/.enrepl,{ep,0,\[Epsilon]max}][[3]];
 f[0][t_] := 1;
 f[n_]'[t_] := n I \[CurlyPhi][0]'[t]f[n][t];
 additiontheorem = {f[n_][t]f[m_][t]:>f[n+m][t],(f[n_][t])^m_:>f[n*m][t]};
 addi[exp_] := Expand[exp]//.additiontheorem;
-sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3]]/.{Sin[\[CurlyPhi][0][t]]->1/(2 I) (f[1][t]-f[-1][t]),Cos[\[CurlyPhi][0][t]]->1/2 (f[1][t]+f[-1][t])};
+sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3]]/.{Sin[\[CurlyPhi][0][t]]->1/(2 I) f[1][t] - 1/(2 I) f[-1][t],Cos[\[CurlyPhi][0][t]]->1/2 f[1][t]+1/2 f[-1][t]};
 bellargument = Table[Table[Factorial[i]\[Theta]sercoeff[[i+1]],{i,1,n}],{n,1,\[Epsilon]max}];
-sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) (f[1][t]-f[-1][t]),1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
+sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) f[1][t]-1/(2 I) f[-1][t],1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
 
 DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
 
@@ -103,24 +103,22 @@ PD[];LogPrint["Acquiring algebraic solutions up to eps^"<>ToString[\[Epsilon]max
 
 For[i=1,i<\[Epsilon]max+1,i++,
 	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
-	ex[i] = Expand[((sinexp[i-2]-\[Rho]  * 1/(2 I) * (x-x^-1)sinexp[i-1]))//.additiontheorem,Trig->False];
-	Monitor[
-		For[j=0,j<i,j++,
-			If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
-			cef = Coefficient[ex[i],x,i-j];
-			If[j==0,
-				solex=-1/((i-j)^2) (cef),
-				If[j==1,
-				solex=-1/((i-j)^2) (cef - 2 I(i-j)D[\[Phi][i-j,j-1][t],t]),
-				solex=-1/((i-j)^2) (cef- 2 I(i-j)D[\[Phi][i-j,j-1][t],t]-D[\[Phi][i-j,j-2][t],{t,2}])
-				];
+	ex[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
+	For[j=0,j<i,j++,
+		If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
+		cef = addi[Coefficient[-1/((i-j)^2) ex[i],x,i-j]];
+		If[j==0,
+			solex = cef,
+			If[j==1,
+			solex = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]],
+			solex = cef + Expand[2/(i-j) I D[\[Phi][i-j,j-1][t],t]] + Expand[1/(i-j)^2 D[\[Phi][i-j,j-2][t],{t,2}]]
 			];
-			LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
-			\[Phi][i-j,j][t_] = addi[solex];
-			DumpSave["phi.mx",\[Phi]];
-			Clear[\[Phi],solex];
 		];
-	,ProgressIndicator[j,{0,i-1}]];
+		LogPrint["Declaring algebraic solution of phi[+-"<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
+		\[Phi][i-j,j][t_] = solex;
+		DumpSave["phi.mx",\[Phi]];
+		Clear[\[Phi],solex];
+	];
 ];
 
 ClearAll[ex,cef,solex];
@@ -136,17 +134,14 @@ vefftime = Timing[
 
 LogPrint["Acquiring acceleration expressions.","PROGRESS"];
 LogPrint["Setting varphis to zero.","PRG:ACC"];
-Monitor[
-	For[m=0,m<highestcoeff+1,m++,
-		\[CurlyPhi][2m][t] = 0;
-		\[CurlyPhi][2m]'[t] = 0;
-	],
-	ProgressIndicator[m,{0,highestcoeff+1}]
+For[m=0,m<highestcoeff+1,m++,
+	\[CurlyPhi][2m][t] = 0;
+	\[CurlyPhi][2m]'[t] = 0;
 ];
 
 LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
 
-acc0[ord_] :=  Coefficient[Expand[(sinexp[ord-2]-\[Rho]  * 1/(2 I) * (x-1/x)sinexp[ord-1]),x||f[n_][t_]],x,0]//.additiontheorem;
+acc0[ord_] :=  addi[Coefficient[Expand[sinexp[ord-2]- r * 1/(2 I) * (x-1/x)sinexp[ord-1],x],x,0]];
 acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 
 For[m=0,m<highestcoeff+1,m++,
@@ -160,28 +155,27 @@ MultilineFunction->None]\)[t]=D[a[2m][t],{t,n}];
 	];
 ];
 
-Monitor[
-	For[m=0,m<highestcoeff,m++,
-		a[2m][t_]=acc0list[[m+1]];
-	],
-	ProgressIndicator[m,{0,highestcoeff-1}]
+For[m=0,m<highestcoeff,m++,
+	a[2m][t_]=acc0list[[m+1]];
 ];
 
 DumpSave["a.mx",a];
 ClearAll[a];
 <<a.mx;
 
-PD[];
-LogPrint["Expanding acceleration expressions.","PRG:POT"];
+LogPrint["Expanding varphi_2m''[t].","PRG:ACC"];
+
 acc0list = addi[acc0list];
 DumpSave["acclist.mx",acc0list];
 ClearAll[acc0list];
 <<acclist.mx;
 
+PD[];
+
 LogPrint["Acquiring frequency expressions..","PRG:POT"];
 
 For[n=0,n<highestcoeff+1,n++,
-	\[Omega][2n] = Collect[addi[-acc0list[[n+1]]]/.{f[n_][_]:>I n},\[Rho],Expand];
+	\[Omega][2n] = Collect[-acc0list[[n+1]]/.{f[n_][_]:>I n},r,Expand];
 ];
 DumpSave["om.mx",\[Omega]];
 
