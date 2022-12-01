@@ -27,9 +27,18 @@ LogPrint[x_,type_] := Module[{},
 	Print[x];
 	outp = "["<>DateString["ISODateTime"]<>"]\t["<>type<>"]\t[Maximum RAM: "<>ToString[Round[N[MaxMemoryUsed[]/(10^9) *1.0],0.01]]<>" GB ("<>ToString[Round[N[MaxMemoryUsed[]/MemoryAvailable[] *100.0],0.01]]<>"%)]\t"<>x;
 	WriteLine[FileNameJoin[{"logs",logfilename}],outp];];
-
-
 PD[]:=Print["---------------------------------------------------------------------"];
+
+SmarterExpand[exp_] := Module[{list,expanded,head},
+	head = ToString[Head[exp]];
+	If[head==ToString[Plus],
+		list = List@@exp;
+		expanded = Map[Expand[#]&,list];
+		Plus@@expanded,
+	Print["Head was "<>head];
+	Expand[exp]
+	]
+];
 
 AppendTo[$Messages,OpenWrite[FileNameJoin[{"logs",logfilename}]]];
 
@@ -81,12 +90,12 @@ dercoeff = Series[ep^2 D[\[CapitalPhi][0],{t,2}] + Sum[If[n==0,0,e[n,t](ep^2 D[\
 f[0][t_] := 1;
 f[n_]'[t_] := n I \[CurlyPhi][0]'[t]f[n][t];
 additiontheorem = {f[n_][t]f[m_][t]:>f[n+m][t],(f[n_][t])^m_:>f[n*m][t]};
-addi[exp_] := Expand[exp]//.additiontheorem;
+addi[exp_] := SmarterExpand[exp]//.additiontheorem;
 sinser = Series[Sin[\[CurlyPhi][0][t]+\[Delta]],{\[Delta],0,\[Epsilon]max-1}][[3]]/.{Sin[\[CurlyPhi][0][t]]->1/(2 I) f[1][t] - 1/(2 I) f[-1][t],Cos[\[CurlyPhi][0][t]]->1/2 f[1][t]+1/2 f[-1][t]};
 bellargument = Table[Table[Factorial[i]\[Theta]sercoeff[[i+1]],{i,1,n}],{n,1,\[Epsilon]max}];
 sinexpfunc[epsord_] := If[epsord<0,0,If[epsord==0,1/(2 I) f[1][t]-1/(2 I) f[-1][t],1/Factorial[epsord] Sum[Factorial[n]sinser[[n+1]]BellY[epsord,n,bellargument[[epsord-n+1]]],{n,1,epsord}]]];
 
-DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,PD,newnot,oddphi0repl,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
+DumpSave["ini.mx",{LogPrint,logfilename,\[Theta],\[Delta]\[Theta],\[CapitalPhi],\[Epsilon]max,highestcoeff,PD,newnot,oddphi0repl,SmarterExpand,additiontheorem,addi}]; (*Dumping basic definitions for later usage.*)
 
 
 (*Sin treatment*)
@@ -100,17 +109,27 @@ Share[]; (*In hope of saving memory.*)
 
 PD[];LogPrint["Acquiring algebraic solutions up to eps^"<>ToString[\[Epsilon]max]<>".","PROGRESS"];
 
-
+LogPrint["Finding relevant coefficients.","PRG:ALG"];
 For[i=1,i<\[Epsilon]max+1,i++,
-	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
-	ex[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
-	DumpSave["ex.mx",ex];
-	ClearAll[ex];
-	<<ex.mx;
+	LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
+	exbef[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
+	For[j=0,j<i,j++,
+		cefbef[i,j] = Coefficient[exbef[i],x,i-j];
+		DumpSave["cefbef.mx",cefbef];
+		ClearAll[cefbef];
+		<<cefbef.mx;
+	];
+	DumpSave["exbef.mx",exbef];
+	ClearAll[exbef];
+	<<exbef.mx;
+];
+ClearAll[exbef];
+For[i=1,i<\[Epsilon]max+1,i++,
+	PD[];LogPrint["Declaring algebraic solutions at order eps^"<>ToString[i]<>".","PRG:ALG"];
 	For[j=0,j<i,j++,
 		LogPrint["Declaring algebraic solution of phi["<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
 		If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
-		cef = addi[-1/((i-j)^2) Coefficient[ex[i],x,i-j]];
+		cef = Expand[-1/((i-j)^2) cefbef[i,j]]//.additiontheorem;
 		DumpSave["cef.mx",cef];
 		ClearAll[cef];
 		<<cef.mx;
@@ -138,7 +157,6 @@ PD[];LogPrint["All phi[n!=0,m,t] declared. It took "<>ToString[Round[algtime,0.1
 vefftime = Timing[
 
 LogPrint["Acquiring acceleration expressions.","PROGRESS"];
-
 LogPrint["Declaring varphi_2m''[t] and derivatives.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
 	For[n=0,n<\[Epsilon]max-1,n++,
@@ -162,24 +180,19 @@ For[m=0,m<highestcoeff,m++,
 	<<a.mx;
 ];
 
-
-
 PD[];LogPrint["Setting varphis to zero.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
 	\[CurlyPhi][2m][t] = 0;
 	\[CurlyPhi][2m]'[t] = 0;
 ];
 
-
 LogPrint["Expanding varphi_2m''[t].","PRG:ACC"];
-
-acc0list = addi[acc0list];
+acc0list = Map[addi[#]&,acc0list];
 DumpSave["acclist.mx",{acc0list}];
 ClearAll[acc0list];
 <<acclist.mx;
 
 LogPrint["Acquiring frequency expressions.","PRG:POT"];
-
 For[n=0,n<highestcoeff+1,n++,
 	\[Omega][2n] = Collect[-acc0list[[n+1]]/.{f[n_][_]:>I n},r,Expand];
 ];
