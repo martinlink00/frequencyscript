@@ -104,10 +104,16 @@ PD[];LogPrint["Acquiring algebraic solutions up to eps^"<>ToString[\[Epsilon]max
 For[i=1,i<\[Epsilon]max+1,i++,
 	PD[];LogPrint["Finding relevant terms at order eps^"<>ToString[i]<>".","PRG:ALG"];
 	ex[i] = Expand[sinexp[i-2]- r * 1/(2 I) * (x-x^-1)sinexp[i-1],x];
+	DumpSave["ex.mx",ex];
+	ClearAll[ex];
+	<<ex.mx;
 	For[j=0,j<i,j++,
 		LogPrint["Declaring algebraic solution of phi["<>ToString[i-j]<>","<>ToString[j]<>"][t].","PRG:ALG"];
 		If[i==1&&j==0,Clear[\[Phi]],<<phi.mx];
-		cef = addi[Coefficient[-1/((i-j)^2) ex[i],x,i-j]];
+		cef = addi[-1/((i-j)^2) Coefficient[ex[i],x,i-j]];
+		DumpSave["cef.mx",cef];
+		ClearAll[cef];
+		<<cef.mx;
 		If[j==0,
 			\[Phi][i-j,j][t_] = cef,
 			If[j==1,
@@ -151,11 +157,12 @@ acc0list = Table[acc0[2 ee+2],{ee,0,highestpowercorr}];
 For[m=0,m<highestcoeff,m++,
 	LogPrint["Inserting into phi[0,"<>ToString[2 m]<>"]''[t].","PRG:ACC"];
 	a[2m][t_]=addi[acc0list[[m+1]]];
+	DumpSave["a.mx",a];
+	ClearAll[a];
+	<<a.mx;
 ];
 
-DumpSave["a.mx",a];
-ClearAll[a];
-<<a.mx;
+
 
 PD[];LogPrint["Setting varphis to zero.","PRG:ACC"];
 For[m=0,m<highestcoeff+1,m++,
